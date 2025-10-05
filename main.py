@@ -85,27 +85,32 @@ def generateFromScratch(data: str):
         system_instruction=[
             types.Part.from_text(text="""You are a **Data Localization Engine** that updates travel itineraries from one destination to another while maintaining data integrity.
 
+You are a highly advanced **Dynamic Itinerary Relocalizer**. Your function is to take an existing travel plan, maintain its internal structure, and translate the entire itinerary to a randomly selected, plausible new destination.
+
 **Input Constraint:**
-The input you receive is a complete trip plan JSON object with existing UUIDs, timestamps, and tasks.
+The input will be a complete trip plan JSON object with existing timestamps, and tasks. You must parse and process this raw JSON input.
 
 **Your Goal:**
-Generate a single, complete JSON object where all itinerary elements are logically consistent with the new destination, **Lisbon, Portugal**, while strictly preserving administrative data from the input.
+Generate a single, complete JSON object that represents a logically consistent itinerary for a new destination, while strictly adhering to all preservation rules.
+
+**Decision Rule (Random Destination Selection):**
+Before generating the output, you **MUST** randomly select a major, non-European world city (e.g., Seoul, Tokyo, Buenos Aires, Sydney, or Cairo) as the new destination for the itinerary.
 
 **Execution Constraints (The Golden Rules):**
-1.  **Pure JSON Output:** Your **ONLY** output must be the raw JSON object. DO NOT include any conversational text, explanations, or code block delimiters (```json).
-2.  **Preservation Rule:** For all objects within the entire JSON structure, you **MUST RETAIN** the original values for the following fields:
-    * `id` (for the trip and all tasks/locations)
+1.  **Pure JSON Output:** Your **ONLY** output must be the raw JSON object, starting with `{` and ending with `}`. **DO NOT** include any conversational text, explanations, or code block delimiters (```json).
+2.  **Preservation Rule (Mandatory):** For all objects in the entire JSON structure, you **MUST RETAIN** the original values for the following administrative and structural fields. Do not attempt to generate or update timestamps unless absolutely required by a date change:
     * `createdAt`
     * `updatedAt`
     * `orderIndex`
     * `isCompleted`
-    * `type`, `category` (unless logically required by a new activity)
+    * `type`, `category` (preserve these unless the activity must be fundamentally changed)
 
-3.  **Localization Rule:** You **MUST UPDATE** the following fields to reflect a cohesive, realistic itinerary for **Lisbon, Portugal**:
-    * The **trip's destination** and **title** (e.g., "Lisbon Spring Getaway").
-    * All **task titles** and **descriptions** (e.g., replace "La Sagrada Familia" with "Jerónimos Monastery").
-    * All **locations** (`locations[...].location` fields) to valid, real-world addresses in **Lisbon**.
-    * All **transport details** (`transportDetails` object) to correctly route flights, taxis, etc., to/from **Lisbon Portela Airport (LIS)**."""),
+3.  **Localization Rule (Mandatory Update):** You **MUST UPDATE** all content and location-specific fields to logically reflect the **newly selected destination** (e.g., Tokyo):
+    * The **trip's title** (e.g., "Kyoto Cultural Immersion").
+    * The **destination** (`destination`, `continent`, etc.) fields.
+    * All **task titles** and **descriptions** to relevant landmarks and activities in the new city.
+    * All **locations** (`locations[...].location` fields) to valid, real-world addresses in the new city.
+    * All **transport details** (`transportDetails` object) to correctly route flights, taxis, and public transit to/from the new city's main international airport (e.g., Narita or Haneda for Tokyo).."""),
         ],
     )
 
@@ -131,21 +136,21 @@ Generate a single, complete JSON object where all itinerary elements are logical
 
 from pydantic import BaseModel, Field
 from typing import List, Optional
-from uuid import UUID
+# from uuid import UUID
 from datetime import datetime
 
 # --- Nested Models (Innermost to Outermost) ---
 
 class Location(BaseModel):
     """Represents a specific geographic point in a task."""
-    id: UUID
+    # id: UUID
     location: str
     locationType: str = Field(description="e.g., 'origin', 'waypoint', 'destination'")
     orderIndex: int
 
 class TransportDetails(BaseModel):
     """Details specific to transportation tasks."""
-    id: UUID
+    # id: UUID
     transportMode: str = Field(description="e.g., 'uber', 'flight', 'taxi', 'subway'")
     fromLocation: str
     toLocation: str
@@ -157,7 +162,7 @@ class TransportDetails(BaseModel):
 
 class Task(BaseModel):
     """Represents a single step or item in the travel plan."""
-    id: UUID
+    # id: UUID
     type: str = Field(description="e.g., 'activity', 'simple', 'transport', 'accommodation'")
     title: str
     description: str
@@ -176,7 +181,7 @@ class Task(BaseModel):
 
 class TravelPlan(BaseModel):
     """The main object representing the entire travel itinerary."""
-    id: UUID
+    # id: UUID
     title: str
     duration: int = Field(description="Trip length in days")
     category: str = Field(description="e.g., 'Leisure', 'Business'")
